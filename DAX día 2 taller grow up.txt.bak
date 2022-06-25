@@ -1,0 +1,7 @@
+DAX DÍA 2 ESPECIALIZACION EN POWER BI
+
+	- Ventas año anterior = CALCULATE([Total ventas], SAMEPERIODLASTYEAR(Calendario[Fecha]))
+	
+	- Var vs AA = [Total ventas] - [Ventas año anterior] --> con esto comparamos las ventas totales con las del año anterior
+	
+	- 
