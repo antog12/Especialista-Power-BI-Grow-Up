@@ -1,0 +1,31 @@
+DAX DÍA 2 ESPECIALIZACION EN POWER BI
+
+	- Ventas año anterior = CALCULATE([Total ventas], SAMEPERIODLASTYEAR(Calendario[Fecha]))
+	
+	- Var vs AA = [Total ventas] - [Ventas año anterior] --> con esto comparamos las ventas totales con las del año anterior
+	
+	- % Var vs AA = DIVIDE([Var vs AA], [Ventas año anterior]) --> al resultado le doy formato de %
+	
+	- Ventas segun crecimiento = 
+			CALCULATE([Total ventas],
+			FILTER(VALUES(Clientes[Empresa]),
+			[% Var vs AA] >= MIN(Crecimientos[Crec Bajo]) && [% Var vs AA] < MAX(Crecimientos[Crec Alto])))
+			
+			Estamos haciendo una tabla de clientes pero no todos, solo los que cumplan el filtro que he metido y calculamos las ventas.
+	
+	- % crecimiento = 
+			CALCULATE([% Var vs AA],
+			FILTER(VALUES(Clientes[Empresa]),
+			[% Var vs AA] >= MIN(Crecimientos[Crec Bajo]) && [% Var vs AA] < MAX(Crecimientos[Crec Alto])))
+			
+			Con esto el creciemiento muestra el %
+			
+	- Cúantos clientes tenemos en cada grupo?
+
+	- Clientes segun crecimiento = 
+			CALCULATE([Total clientes],
+			FILTER(VALUES(Clientes[Empresa]),
+			[% Var vs AA] >= MIN(Crecimientos[Crec Bajo]) && [% Var vs AA] < MAX(Crecimientos[Crec Alto])))
+			
+	- 
+	Tamaño de slicer = 1 --> con esto pongo del mismo tamaño todos los slicer ( es una medida rápida)
