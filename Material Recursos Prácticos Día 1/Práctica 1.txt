@@ -1,0 +1,80 @@
+Recurso Practico Woroup Up:
+Análisis de indicadores generales.
+
+Objetivo:
+	-ventas en dolares
+	-unidades vendida
+	-Cantidad de ordenes de compra
+	- etc..
+	
+La empresa vende diferentes producutos de consumo alimenticio y vamos a venderlo en diferentes partes del mundo.
+
+Desglose de requerimientos:
+	-Resultados generales de un vistazo (tarjetas):
+			- Total ventas.
+			- Unidades vendidas.
+			- Total ordenes.
+			- Total clientes.
+	- Evolución mesula de las ventas:
+			- Gráfico de líneas.
+			
+	- Ventas de las 5 categorias top:
+			- Gráfico de barras horizontal.
+			
+	- Distribución porcentual de las ventas:
+			- Gráfico de anillos.
+	
+	-Cantidad de rdenes por año:
+			- Gráfico de columnas.
+			
+	-Cantidad de clientes por país:
+			- Mapa.
+			
+	
+	- Filtros:
+			- año, mes, categoría, país.
+			
+			
+			
+MEDIDAS DAX:
+
+	- Total ventas = SUM(Facturas[Ventas])
+	- Unidades vendidas = SUM(Facturas[Cantidad])
+	- Total ordenes = DISTINCTCOUNT(Facturas[ID_Orden]) --> como se repiten las ordenes, quiero valores únicos.
+	- Total ordenes = DISTINCTCOUNT(Facturas[ID_Orden]) --> clientes únicos-
+	-
+
+
+
+
+TABLA CALENDARIO EN LENGUAJE M:
+
+let funcionTablaCalendario = (FechaInicio as date, FechaFin as date, MesInicioFY as number) as table =>
+  let
+    CantidadDias = Duration.Days(Duration.From(FechaFin - FechaInicio))+1,
+    Source = List.Dates(FechaInicio,CantidadDias,#duration(1,0,0,0)),
+    TableFromList = Table.FromList(Source, Splitter.SplitByNothing()),   
+    ChangedType = Table.TransformColumnTypes(TableFromList,{{"Column1", type date}}),
+    RenamedColumns = Table.RenameColumns(ChangedType,{{"Column1", "Fecha"}}),
+    InsertYear = Table.AddColumn(RenamedColumns, "Año", each Date.Year([Fecha]),type text),
+    InsertYearNumber = Table.AddColumn(RenamedColumns, "NumeroAño", each Date.Year([Fecha])),
+    InsertQuarter = Table.AddColumn(InsertYear, "NumeroTrimestre", each Date.QuarterOfYear([Fecha])),
+    InsertMonth = Table.AddColumn(InsertQuarter, "NumeroMes", each Date.Month([Fecha]), type text),
+    InsertDay = Table.AddColumn(InsertMonth, "Dia", each Date.Day([Fecha])),
+    InsertDayInt = Table.AddColumn(InsertDay, "NumeroFecha", each [Año] * 10000 + [NumeroMes] * 100 + [Dia]),
+    InsertMonthName = Table.AddColumn(InsertDayInt, "Mes", each Date.ToText([Fecha], "MMMM"), type text),
+    InsertCalendarMonth = Table.AddColumn(InsertMonthName, "Mes y Año", each (try(Text.Range([Mes],0,3)) otherwise [Mes]) & " " & Number.ToText([Año])),
+    InsertCalendarQtr = Table.AddColumn(InsertCalendarMonth, "Trim y Año", each "Q" & Number.ToText([NumeroTrimestre]) & " " & Number.ToText([Año])),
+    InsertDayWeek = Table.AddColumn(InsertCalendarQtr, "DiaSemana", each Date.DayOfWeek([Fecha])),
+    InsertDayName = Table.AddColumn(InsertDayWeek, "Nombre del Dia", each Date.ToText([Fecha], "dddd"), type text),
+    InsertWeekEnding = Table.AddColumn(InsertDayName, "Final de Semana", each Date.EndOfWeek([Fecha]), type date),
+    InsertWeekNumber= Table.AddColumn(InsertWeekEnding, "NumeroSemana", each Date.WeekOfYear([Fecha])),
+    InsertMonthnYear = Table.AddColumn(InsertWeekNumber,"Numero Mes-Año", each [Año] * 10000 + [NumeroMes] * 100),
+    InsertQuarternYear = Table.AddColumn(InsertMonthnYear,"Numero Trim-Año", each [Año] * 10000 + [NumeroTrimestre] * 100),
+    ChangedType1 = Table.TransformColumnTypes(InsertQuarternYear,{{"Numero Trim-Año", Int64.Type},{"NumeroSemana", Int64.Type},{"Año", type text},{"Numero Mes-Año", Int64.Type}, {"NumeroFecha", Int64.Type}, {"Dia", Int64.Type}, {"NumeroMes", Int64.Type}, {"NumeroTrimestre", Int64.Type}, {"Mes y Año", type text}, {"Trim y Año", type text}, {"DiaSemana", Int64.Type}}),
+    InsertShortYear = Table.AddColumn(ChangedType1, "Año corto", each Text.End(Text.From([Año]), 2), type text),
+    AddFY = Table.AddColumn(InsertShortYear, "FY", each "FY"&(if [NumeroMes]>=MesInicioFY then Text.From(Number.From([Año corto])+1) else [Año corto]))
+in
+    AddFY
+in
+    funcionTablaCalendario
